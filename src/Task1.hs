@@ -2,6 +2,7 @@
 -- The above pragma enables all warnings
 
 module Task1 where
+import Text.Read (readMaybe)
 
 -- * Expression data type
 
@@ -28,7 +29,13 @@ data IExpr =
 -- 9
 --
 evalIExpr :: IExpr -> Integer
-evalIExpr = error "TODO: define evalIExpr"
+evalIExpr expr = case expr of
+  Lit x -> x
+  Add expr1 expr2 -> culculate expr1 expr2 (+)
+  Mul expr1 expr2 -> culculate expr1 expr2 (*)
+  where
+    culculate :: IExpr -> IExpr -> (Integer -> Integer -> Integer) -> Integer
+    culculate e1 e2 op = op (evalIExpr e1) (evalIExpr e2)
 
 -- * Parsing
 
@@ -55,7 +62,34 @@ class Parse a where
 -- Nothing
 --
 instance Parse IExpr where
-  parse = error "TODO: define parse (Parse IExpr)"
+  parse :: String -> Maybe IExpr
+  parse s = go (words s) []
+    where
+      go :: [String] -> [IExpr] -> Maybe IExpr
+      go [] stack     = case stack of
+        [x] -> Just x
+        _   -> Nothing
+      go (x:xs) stack = case x of
+        "+" -> applyOp xs stack Add
+        "*" -> applyOp xs stack Mul
+        _   -> case parse x of
+          Just n  -> go xs (Lit n : stack)
+          Nothing -> Nothing
+       
+      applyOp :: [String] -> [IExpr] -> (IExpr -> IExpr -> IExpr) -> Maybe IExpr
+      applyOp xs stack op = case stack of 
+          (e1:e2:es) -> go xs (op e2 e1 : es)
+          _          -> Nothing
+
+instance Parse Integer where
+  parse :: String -> Maybe Integer
+  parse = readMaybe
+
+instance Parse Bool where
+  parse :: String -> Maybe Bool
+  parse "True"  = Just True
+  parse "False" = Just False
+  parse _       = Nothing
 
 -- * Evaluation with parsing
 
@@ -77,4 +111,6 @@ instance Parse IExpr where
 -- Nothing
 --
 evaluateIExpr :: String -> Maybe Integer
-evaluateIExpr = error "TODO: define evaluateIExpr"
+evaluateIExpr s = case parse s of
+  Just e  -> Just (evalIExpr e)
+  Nothing -> Nothing
