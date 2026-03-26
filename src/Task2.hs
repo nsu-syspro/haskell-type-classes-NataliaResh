@@ -8,8 +8,6 @@ module Task2 where
 
 import Task1 (Parse, Parse(..))
 
-import Data.List (find)
-
 -- * Expression data type
 
 -- | Generalized representation of expressions comprising
@@ -100,14 +98,10 @@ instance Eval Integer IntOp where
 evalExpr :: (Eval a op) => [(String, a)] -> Expr a op -> Maybe a
 evalExpr dict e = case e of
   Lit n         -> Just n
-  Var x         -> case find (\y -> fst y == x) dict of
-    Just p  -> Just (snd p)
-    Nothing -> Nothing
-  (BinOp op x y) -> case evalExpr dict x of 
-    (Just e1) -> case evalExpr dict y of
-      (Just e2) -> Just $ evalBinOp op e1 e2
-      Nothing   -> Nothing
-    Nothing   -> Nothing
+  Var x         -> lookup x dict
+  (BinOp op x y) -> case (evalExpr dict x, evalExpr dict y) of 
+    (Just e1, Just e2) -> Just $ evalBinOp op e1 e2
+    _   -> Nothing
 
 -- | Parses given integer expression in Reverse Polish Notation and evaluates it
 -- using given association list of variable values

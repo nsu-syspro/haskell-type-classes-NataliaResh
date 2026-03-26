@@ -31,11 +31,8 @@ data IExpr =
 evalIExpr :: IExpr -> Integer
 evalIExpr expr = case expr of
   Lit x -> x
-  Add expr1 expr2 -> culculate expr1 expr2 (+)
-  Mul expr1 expr2 -> culculate expr1 expr2 (*)
-  where
-    culculate :: IExpr -> IExpr -> (Integer -> Integer -> Integer) -> Integer
-    culculate e1 e2 op = op (evalIExpr e1) (evalIExpr e2)
+  Add x y -> evalIExpr x + evalIExpr y
+  Mul x y -> evalIExpr x * evalIExpr y
 
 -- * Parsing
 
